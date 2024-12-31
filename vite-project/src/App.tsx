@@ -15,13 +15,13 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CircularProgress from "@mui/material/CircularProgress";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { brown } from "@mui/material/colors";
-import DataTable, { createTheme as ct } from "react-data-table-component";
-import { productsApiResponse, Product, Prod } from "./constant";
+import DataTable, { createTheme as tableCreateTheme } from "react-data-table-component";
+import { productsApiResponse, Product, Prod , PRODUCT_API_ENDPOINT} from "./constant";
 import EditProductDialog from "./EditProductDialogue";
 
 const tableColumnChipStyle = { color: "orange", background: "black" };
 const actionColumnChipStyle = { ...tableColumnChipStyle, marginLeft: "20px" };
-const addUniqueIds = (products: Prod[]) => {
+const addUniqueIdsToProducts = (products: Prod[]) => {
   return products.map((product, index) => ({
     ...product,
     id: `product-${index + 1}`,
@@ -30,10 +30,10 @@ const addUniqueIds = (products: Prod[]) => {
 };
 
 function App() {
-  const [data, setData] = useState(addUniqueIds(productsApiResponse));
+  const [productData, setProductData] = useState(addUniqueIdsToProducts(productsApiResponse));
   // Calculate inventory stats
   const calculateProductStats = useMemo(() => {
-    const filteredData = data.filter((item) => !item.isProductDisabled); // Exclude disabled products
+    const filteredData = productData.filter((item) => !item.isProductDisabled); // Exclude disabled products
 
     const totalProduct = filteredData.reduce(
       (sum, item) => sum + item.quantity,
@@ -68,7 +68,7 @@ function App() {
       },
       { icon: <CategoryIcon />, title: "No of category", value: noOfCategory },
     ];
-  }, [data]);
+  }, [productData]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -80,7 +80,7 @@ function App() {
 
   useEffect(() => {
     setProductStats(calculateProductStats);
-  }, [calculateProductStats, data]);
+  }, [calculateProductStats, productData]);
 
   const darkTheme = createTheme({
     palette: {
@@ -88,130 +88,135 @@ function App() {
     },
   });
 
-  ct("dark", {
+  tableCreateTheme("dark", {
     background: {
       default: "#242323",
     },
   });
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProductData = async () => {
       try {
         const response = await fetch(
-          "https://dev-0tf0hinghgjl39z.api.raw-labs.com/inventory"
+          PRODUCT_API_ENDPOINT
         );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const result = await response.json();
-        setData(addUniqueIds(result));
-      } catch (err: { message: string }) {
+        setProductData(addUniqueIdsToProducts(result));
+      } catch (err: any) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchProductData();
   }, []);
+
+  const toggleViewMode = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setViewUser(event.target.checked);
+  }, [])
 
   const handleProductUpdate = useCallback((product: Product) => {
     setCurrentProductToEdit(product);
     setOpenEditProductDialog(true);
   }, []);
 
-  const handleSaveProduct = (updatedProduct: Product) => {
-    setData((prevProducts: Product[]) =>
+  const handleSaveProduct = useCallback((updatedProduct: Product) => {
+    setProductData((prevProducts: Product[]) =>
       prevProducts.map((product) =>
         product.id === updatedProduct.id ? updatedProduct : product
       )
     );
     setOpenEditProductDialog(false);
-  };
+  }, [])
 
   const handleProductDelete = useCallback(
     (productId: string) => {
-      const updatedProductsData = data.filter((prod) => prod.id !== productId);
-      setData(updatedProductsData);
+      const updatedProductsData = productData.filter((prod) => prod.id !== productId);
+      setProductData(updatedProductsData);
     },
-    [data]
+    [productData]
   );
 
   const toggleProduct = useCallback(
     (productId: string) => {
-      const updatedProductsData = data.map((prod) =>
+      const updatedProductsData = productData.map((prod) =>
         prod.id === productId
           ? { ...prod, isProductDisabled: !prod.isProductDisabled }
           : prod
       );
-      setData(updatedProductsData);
+      setProductData(updatedProductsData);
     },
-    [data]
+    [productData]
   );
 
-  const columns = [
-    {
-      name: <Chip label="Name" sx={tableColumnChipStyle} />,
-      selector: (row: Product) => row.name,
-    },
-    {
-      name: <Chip label="Category" sx={tableColumnChipStyle} />,
-      cell: (row: Product) => (
-        <Typography variant="body1" sx={{ marginLeft: "10px" }}>
-          {row.category}
-        </Typography>
-      ),
-    },
-    {
-      name: <Chip label="Price" sx={tableColumnChipStyle} />,
-      cell: (row: Product) => (
-        <Typography variant="body1" sx={{ marginLeft: "10px" }}>
-          {row.price}
-        </Typography>
-      ),
-    },
-    {
-      name: <Chip label="Quantity" sx={tableColumnChipStyle} />,
-      cell: (row: Product) => (
-        <Typography variant="body1" sx={{ marginLeft: "10px" }}>
-          {row.quantity}
-        </Typography>
-      ),
-    },
-    {
-      name: <Chip label="Value" sx={tableColumnChipStyle} />,
-      cell: (row: Product) => (
-        <Typography variant="body1" sx={{ marginLeft: "10px" }}>
-          {row.value}
-        </Typography>
-      ),
-    },
-    {
-      name: <Chip label="ACTION" sx={actionColumnChipStyle} />,
-      cell: (row: Product) => (
-        <Stack direction="row" gap={1}>
-          <IconButton
-            disabled={isViewUser || row.isProductDisabled}
-            onClick={() => handleProductUpdate(row)}
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            disabled={isViewUser}
-            onClick={() => toggleProduct(row.id)}
-          >
-            {row.isProductDisabled ? <VisibilityOffIcon /> : <VisibilityIcon />}
-          </IconButton>
-          <IconButton
-            disabled={isViewUser}
-            onClick={() => handleProductDelete(row.id)}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
-      ),
-    },
-  ];
+  const columns = useMemo(() =>
+    [
+      {
+        name: <Chip label="Name" sx={tableColumnChipStyle} />,
+        selector: (row: Product) => row.name,
+      },
+      {
+        name: <Chip label="Category" sx={tableColumnChipStyle} />,
+        cell: (row: Product) => (
+          <Typography variant="body1" sx={{ marginLeft: "10px" }}>
+            {row.category}
+          </Typography>
+        ),
+      },
+      {
+        name: <Chip label="Price" sx={tableColumnChipStyle} />,
+        cell: (row: Product) => (
+          <Typography variant="body1" sx={{ marginLeft: "10px" }}>
+            {row.price}
+          </Typography>
+        ),
+      },
+      {
+        name: <Chip label="Quantity" sx={tableColumnChipStyle} />,
+        cell: (row: Product) => (
+          <Typography variant="body1" sx={{ marginLeft: "10px" }}>
+            {row.quantity}
+          </Typography>
+        ),
+      },
+      {
+        name: <Chip label="Value" sx={tableColumnChipStyle} />,
+        cell: (row: Product) => (
+          <Typography variant="body1" sx={{ marginLeft: "10px" }}>
+            {row.value}
+          </Typography>
+        ),
+      },
+      {
+        name: <Chip label="ACTION" sx={actionColumnChipStyle} />,
+        cell: (row: Product) => (
+          <Stack direction="row" gap={1}>
+            <IconButton
+              disabled={isViewUser || row.isProductDisabled}
+              onClick={() => handleProductUpdate(row)}
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              disabled={isViewUser}
+              onClick={() => toggleProduct(row.id)}
+            >
+              {row.isProductDisabled ? <VisibilityOffIcon /> : <VisibilityIcon />}
+            </IconButton>
+            <IconButton
+              disabled={isViewUser}
+              onClick={() => handleProductDelete(row.id)}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+        ),
+      },
+    ] , [handleProductDelete, handleProductUpdate, isViewUser, toggleProduct]) 
 
   if (loading)
     return (
@@ -224,9 +229,7 @@ function App() {
 
   // if (error) return <p>Error: {error}</p>;
 
-  const toggleViewMode = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setViewUser(event.target.checked);
-  };
+
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -272,7 +275,7 @@ function App() {
             </Box>
           ))}
         </Stack>
-        <DataTable columns={columns} data={data} theme="dark" />
+        <DataTable columns={columns} data={productData} theme="dark" />
       </Stack>
       {openEditProductDialog && currentProductToEdit && (
         <EditProductDialog
