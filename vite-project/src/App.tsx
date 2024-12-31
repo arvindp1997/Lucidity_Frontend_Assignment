@@ -1,26 +1,35 @@
-import Stack from "@mui/material/Stack";
-import Box from "@mui/material/Box";
-import { Chip, IconButton, Switch, Typography } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
-import RemoveShoppingCartIcon from "@mui/icons-material/RemoveShoppingCart";
 import CategoryIcon from "@mui/icons-material/Category";
+import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
+import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import RemoveShoppingCartIcon from "@mui/icons-material/RemoveShoppingCart";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import CircularProgress from "@mui/material/CircularProgress";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { brown } from "@mui/material/colors";
-import DataTable, { createTheme as tableCreateTheme } from "react-data-table-component";
-import { productsApiResponse, Product, Prod , PRODUCT_API_ENDPOINT} from "./constant";
+import { Chip, IconButton, Typography } from "@mui/material";
+import CssBaseline from "@mui/material/CssBaseline";
+import Stack from "@mui/material/Stack";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import DataTable, {
+  createTheme as createDataTableTheme,
+} from "react-data-table-component";
+import {
+  Prod,
+  Product,
+  PRODUCT_API_ENDPOINT,
+  productsApiResponse,
+} from "./constant";
 import EditProductDialog from "./EditProductDialogue";
+import Loader from "./Loader";
+import Navbar from "./Navbar";
+import ProductStatsWidget from "./ProductStatsWidget";
 
-const tableColumnChipStyle = { color: "orange", background: "black" };
-const actionColumnChipStyle = { ...tableColumnChipStyle, marginLeft: "20px" };
+const tableColumnHeaderChipStyle = { color: "orange", background: "black" };
+const actionColumnHeaderChipStyle = {
+  ...tableColumnHeaderChipStyle,
+  marginLeft: "20px",
+};
 const addUniqueIdsToProducts = (products: Prod[]) => {
   return products.map((product, index) => ({
     ...product,
@@ -29,8 +38,10 @@ const addUniqueIdsToProducts = (products: Prod[]) => {
   }));
 };
 
-function App() {
-  const [productData, setProductData] = useState(addUniqueIdsToProducts(productsApiResponse));
+function InventoryManagement() {
+  const [productData, setProductData] = useState(
+    addUniqueIdsToProducts(productsApiResponse)
+  );
   // Calculate inventory stats
   const calculateProductStats = useMemo(() => {
     const filteredData = productData.filter((item) => !item.isProductDisabled); // Exclude disabled products
@@ -88,36 +99,37 @@ function App() {
     },
   });
 
-  tableCreateTheme("dark", {
+  createDataTableTheme("dark", {
     background: {
       default: "#242323",
     },
   });
 
-  useEffect(() => {
-    const fetchProductData = async () => {
-      try {
-        const response = await fetch(
-          PRODUCT_API_ENDPOINT
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
-        setProductData(addUniqueIdsToProducts(result));
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+  const fetchProductData = useCallback(async () => {
+    try {
+      const response = await fetch(PRODUCT_API_ENDPOINT);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
-
-    fetchProductData();
+      const result = await response.json();
+      setProductData(addUniqueIdsToProducts(result));
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const toggleViewMode = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setViewUser(event.target.checked);
-  }, [])
+  useEffect(() => {
+    fetchProductData();
+  }, [fetchProductData]);
+
+  const toggleViewMode = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setViewUser(event.target.checked);
+    },
+    []
+  );
 
   const handleProductUpdate = useCallback((product: Product) => {
     setCurrentProductToEdit(product);
@@ -131,11 +143,13 @@ function App() {
       )
     );
     setOpenEditProductDialog(false);
-  }, [])
+  }, []);
 
   const handleProductDelete = useCallback(
     (productId: string) => {
-      const updatedProductsData = productData.filter((prod) => prod.id !== productId);
+      const updatedProductsData = productData.filter(
+        (prod) => prod.id !== productId
+      );
       setProductData(updatedProductsData);
     },
     [productData]
@@ -153,14 +167,14 @@ function App() {
     [productData]
   );
 
-  const columns = useMemo(() =>
-    [
+  const columns = useMemo(
+    () => [
       {
-        name: <Chip label="Name" sx={tableColumnChipStyle} />,
+        name: <Chip label="Name" sx={tableColumnHeaderChipStyle} />,
         selector: (row: Product) => row.name,
       },
       {
-        name: <Chip label="Category" sx={tableColumnChipStyle} />,
+        name: <Chip label="Category" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
           <Typography variant="body1" sx={{ marginLeft: "10px" }}>
             {row.category}
@@ -168,7 +182,7 @@ function App() {
         ),
       },
       {
-        name: <Chip label="Price" sx={tableColumnChipStyle} />,
+        name: <Chip label="Price" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
           <Typography variant="body1" sx={{ marginLeft: "10px" }}>
             {row.price}
@@ -176,7 +190,7 @@ function App() {
         ),
       },
       {
-        name: <Chip label="Quantity" sx={tableColumnChipStyle} />,
+        name: <Chip label="Quantity" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
           <Typography variant="body1" sx={{ marginLeft: "10px" }}>
             {row.quantity}
@@ -184,7 +198,7 @@ function App() {
         ),
       },
       {
-        name: <Chip label="Value" sx={tableColumnChipStyle} />,
+        name: <Chip label="Value" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
           <Typography variant="body1" sx={{ marginLeft: "10px" }}>
             {row.value}
@@ -192,7 +206,7 @@ function App() {
         ),
       },
       {
-        name: <Chip label="ACTION" sx={actionColumnChipStyle} />,
+        name: <Chip label="ACTION" sx={actionColumnHeaderChipStyle} />,
         cell: (row: Product) => (
           <Stack direction="row" gap={1}>
             <IconButton
@@ -205,7 +219,11 @@ function App() {
               disabled={isViewUser}
               onClick={() => toggleProduct(row.id)}
             >
-              {row.isProductDisabled ? <VisibilityOffIcon /> : <VisibilityIcon />}
+              {row.isProductDisabled ? (
+                <VisibilityOffIcon />
+              ) : (
+                <VisibilityIcon />
+              )}
             </IconButton>
             <IconButton
               disabled={isViewUser}
@@ -216,65 +234,19 @@ function App() {
           </Stack>
         ),
       },
-    ] , [handleProductDelete, handleProductUpdate, isViewUser, toggleProduct]) 
+    ],
+    [handleProductDelete, handleProductUpdate, isViewUser, toggleProduct]
+  );
 
-  if (loading)
-    return (
-      <Box
-        sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-
-  // if (error) return <p>Error: {error}</p>;
-
-
+  if (loading) return <Loader />;
 
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Stack direction="column" spacing={4} sx={{ margin: "10px" }}>
-        <Stack direction="row" gap={6} alignSelf="flex-end" alignItems="center">
-          <Box display="flex" flexDirection="row" alignItems="center">
-            <Typography variant="body1">admin</Typography>
-            <Switch
-              checked={isViewUser}
-              onChange={toggleViewMode}
-              inputProps={{ "aria-label": "controlled" }}
-            />
-            <Typography variant="body1">user</Typography>
-          </Box>
-          <IconButton>
-            <LogoutIcon />
-          </IconButton>
-        </Stack>
+        <Navbar isViewUser={isViewUser} toggleViewMode={toggleViewMode} />
         <Typography variant="h3">Inventory stats</Typography>
-        <Stack direction="row" justifyContent="space-between">
-          {productStats.map((item) => (
-            <Box
-              key={item.title}
-              display="flex"
-              flexDirection="row"
-              gap={4}
-              width={350}
-              height={120}
-              sx={{
-                backgroundColor: brown[900],
-                borderRadius: "5%",
-                padding: "20px",
-              }}
-            >
-              {item.icon}
-              <Stack direction="column" gap={2}>
-                <Typography>{item.title}</Typography>
-                <Typography variant="h4" fontSize={40}>
-                  {item.value}
-                </Typography>
-              </Stack>
-            </Box>
-          ))}
-        </Stack>
+        <ProductStatsWidget productStats={productStats} />
         <DataTable columns={columns} data={productData} theme="dark" />
       </Stack>
       {openEditProductDialog && currentProductToEdit && (
@@ -289,4 +261,4 @@ function App() {
   );
 }
 
-export default App;
+export default InventoryManagement;
