@@ -72,7 +72,7 @@ function InventoryManagement() {
       {
         icon: <CurrencyExchangeIcon style={widgetIconStyle} />,
         title: "Total store value",
-        value: `$${totalStoreValue.toLocaleString()}`,
+        value: totalStoreValue.toLocaleString(),
       },
       {
         icon: <RemoveShoppingCartIcon style={widgetIconStyle} />,
@@ -176,12 +176,16 @@ function InventoryManagement() {
     () => [
       {
         name: <Chip label="Name" sx={tableColumnHeaderChipStyle} />,
-        selector: (row: Product) => row.name,
+        cell: (row: Product) => (
+          <Typography variant="body1" sx={{ color:  row.isProductDisabled ? 'gray' : ''}}>
+            {row.name}
+          </Typography>
+        ),
       },
       {
         name: <Chip label="Category" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
-          <Typography variant="body1" sx={{ marginLeft: "10px" }}>
+          <Typography variant="body1" sx={{ marginLeft: "10px" , color:  row.isProductDisabled ? 'gray' : ''}}>
             {row.category}
           </Typography>
         ),
@@ -189,7 +193,7 @@ function InventoryManagement() {
       {
         name: <Chip label="Price" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
-          <Typography variant="body1" sx={{ marginLeft: "10px" }}>
+          <Typography variant="body1" sx={{ marginLeft: "10px", color:  row.isProductDisabled ? 'gray' : '' }}>
             {row.price}
           </Typography>
         ),
@@ -197,7 +201,7 @@ function InventoryManagement() {
       {
         name: <Chip label="Quantity" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
-          <Typography variant="body1" sx={{ marginLeft: "10px" }}>
+          <Typography variant="body1" sx={{ marginLeft: "10px", color:  row.isProductDisabled ? 'gray' : '' }}>
             {row.quantity}
           </Typography>
         ),
@@ -205,7 +209,7 @@ function InventoryManagement() {
       {
         name: <Chip label="Value" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
-          <Typography variant="body1" sx={{ marginLeft: "10px" }}>
+          <Typography variant="body1" sx={{ marginLeft: "10px", color:  row.isProductDisabled ? 'gray' : '' }}>
             {row.value}
           </Typography>
         ),
