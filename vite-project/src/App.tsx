@@ -82,7 +82,6 @@ function InventoryManagement() {
   }, [productData]);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [isViewUser, setViewUser] = useState(false);
   const [productStats, setProductStats] = useState(calculateProductStats);
   const [openEditProductDialog, setOpenEditProductDialog] = useState(false);
@@ -113,8 +112,8 @@ function InventoryManagement() {
       }
       const result = await response.json();
       setProductData(addUniqueIdsToProducts(result));
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      console.log(err)
     } finally {
       setLoading(false);
     }
