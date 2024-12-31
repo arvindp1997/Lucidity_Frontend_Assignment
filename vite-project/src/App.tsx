@@ -30,6 +30,8 @@ const actionColumnHeaderChipStyle = {
   ...tableColumnHeaderChipStyle,
   marginLeft: "20px",
 };
+const widgetIconStyle = { fontSize: 40 };
+
 const addUniqueIdsToProducts = (products: Prod[]) => {
   return products.map((product, index) => ({
     ...product,
@@ -63,21 +65,25 @@ function InventoryManagement() {
 
     return [
       {
-        icon: <ShoppingCartIcon />,
+        icon: <ShoppingCartIcon style={widgetIconStyle} />,
         title: "Total product",
         value: totalProduct,
       },
       {
-        icon: <CurrencyExchangeIcon />,
+        icon: <CurrencyExchangeIcon style={widgetIconStyle} />,
         title: "Total store value",
-        value: `$${totalStoreValue}`,
+        value: `$${totalStoreValue.toLocaleString()}`,
       },
       {
-        icon: <RemoveShoppingCartIcon />,
+        icon: <RemoveShoppingCartIcon style={widgetIconStyle} />,
         title: "Out of stocks",
         value: outOfStock,
       },
-      { icon: <CategoryIcon />, title: "No of category", value: noOfCategory },
+      {
+        icon: <CategoryIcon style={widgetIconStyle} />,
+        title: "No of category",
+        value: noOfCategory,
+      },
     ];
   }, [productData]);
 
@@ -113,7 +119,7 @@ function InventoryManagement() {
       const result = await response.json();
       setProductData(addUniqueIdsToProducts(result));
     } catch (err: unknown) {
-      console.log(err)
+      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -209,12 +215,14 @@ function InventoryManagement() {
         cell: (row: Product) => (
           <Stack direction="row" gap={1}>
             <IconButton
+              color="success"
               disabled={isViewUser || row.isProductDisabled}
               onClick={() => handleProductUpdate(row)}
             >
               <EditIcon />
             </IconButton>
             <IconButton
+              color="primary"
               disabled={isViewUser}
               onClick={() => toggleProduct(row.id)}
             >
@@ -225,6 +233,7 @@ function InventoryManagement() {
               )}
             </IconButton>
             <IconButton
+              color="warning"
               disabled={isViewUser}
               onClick={() => handleProductDelete(row.id)}
             >
