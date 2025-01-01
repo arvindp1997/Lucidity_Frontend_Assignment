@@ -37,7 +37,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
   const updatedProduct = useMemo(
     () => ({
       ...product,
-      category,
+      category: category.trim(),
       quantity,
       price: `$${price}`,
       value: finalValue,
