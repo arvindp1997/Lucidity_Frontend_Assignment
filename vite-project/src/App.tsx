@@ -30,6 +30,7 @@ const actionColumnHeaderChipStyle = {
   ...tableColumnHeaderChipStyle,
   marginLeft: "20px",
 };
+const tableCellDisabledStyle = (isRowDisabled: boolean) => { return {color:  isRowDisabled ? 'gray' : ''}}
 const widgetIconStyle = { fontSize: 40 };
 
 const addUniqueIdsToProducts = (products: Prod[]) => {
@@ -177,7 +178,7 @@ function InventoryManagement() {
       {
         name: <Chip label="Name" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
-          <Typography variant="body1" sx={{ color:  row.isProductDisabled ? 'gray' : ''}}>
+          <Typography variant="body1" sx={tableCellDisabledStyle(row.isProductDisabled)}>
             {row.name}
           </Typography>
         ),
@@ -185,7 +186,7 @@ function InventoryManagement() {
       {
         name: <Chip label="Category" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
-          <Typography variant="body1" sx={{ marginLeft: "10px" , color:  row.isProductDisabled ? 'gray' : ''}}>
+          <Typography variant="body1" sx={{ marginLeft: "10px" ,...tableCellDisabledStyle(row.isProductDisabled)}}>
             {row.category}
           </Typography>
         ),
@@ -193,7 +194,7 @@ function InventoryManagement() {
       {
         name: <Chip label="Price" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
-          <Typography variant="body1" sx={{ marginLeft: "10px", color:  row.isProductDisabled ? 'gray' : '' }}>
+          <Typography variant="body1" sx={{ marginLeft: "10px",...tableCellDisabledStyle(row.isProductDisabled)}}>
             {row.price}
           </Typography>
         ),
@@ -201,7 +202,7 @@ function InventoryManagement() {
       {
         name: <Chip label="Quantity" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
-          <Typography variant="body1" sx={{ marginLeft: "10px", color:  row.isProductDisabled ? 'gray' : '' }}>
+          <Typography variant="body1" sx={{ marginLeft: "10px", ...tableCellDisabledStyle(row.isProductDisabled) }}>
             {row.quantity}
           </Typography>
         ),
@@ -209,7 +210,7 @@ function InventoryManagement() {
       {
         name: <Chip label="Value" sx={tableColumnHeaderChipStyle} />,
         cell: (row: Product) => (
-          <Typography variant="body1" sx={{ marginLeft: "10px", color:  row.isProductDisabled ? 'gray' : '' }}>
+          <Typography variant="body1" sx={{ marginLeft: "10px",...tableCellDisabledStyle(row.isProductDisabled) }}>
             {row.value}
           </Typography>
         ),
