@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,38 +27,48 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
   onSave,
 }) => {
   const [category, setCategory] = useState(product.category);
-  const [quantity, setQuantity] = useState(product.quantity);
-  const [price, setPrice] = useState(parseInt(product.price.slice(1)));
+  const [quantity, setQuantity] = useState(Math.max(0, product.quantity || 0));
+  const [price, setPrice] = useState(
+    Math.max(0, parseInt(product.price.slice(1)) || 0)
+  );
 
-  const value = !isNaN(quantity * price) ? quantity * price : 0;
-  const finalValue = !isNaN(value) ? `$${value}` : "0";
-  
-  const handleSave = () => {
-    const updatedProduct = {
+  const finalValue = `$${quantity > 0 && price > 0 ? quantity * price : 0}`;
+
+  const updatedProduct = useMemo(
+    () => ({
       ...product,
       category,
       quantity,
-      price: "$" + price,
+      price: `$${price}`,
       value: finalValue,
-    };
-    onSave(updatedProduct);
-  };
+    }),
+    [category, quantity, price, finalValue, product]
+  );
+
+  const normalizeProduct = (product: Product) => ({
+    ...product,
+    value: product.value.startsWith("$") ? product.value : `$${product.value}`,
+  });
+  
+  const onSaveDisabled = useMemo(() => {
+    const normalizedOriginal = normalizeProduct(product);
+    const normalizedUpdated = normalizeProduct(updatedProduct);
+    return JSON.stringify(normalizedOriginal) === JSON.stringify(normalizedUpdated);
+  }, [product, updatedProduct]);
+
+  const handleSave = () => onSave(updatedProduct);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        display="flex"
-        padding={2}
-      >
+      <Stack direction="row" justifyContent="space-between" padding={2}>
         <Typography fontSize={35} paddingLeft={2}>
-          Edit product
+          Edit Product
         </Typography>
         <IconButton
-          color='warning'
+          color="warning"
           onClick={onClose}
-          sx={{ display: "flex", alignSelf: "flex-end" }}
+          sx={{ alignSelf: "flex-end" }}
+          aria-label="Close edit dialog"
         >
           <CloseIcon />
         </IconButton>
@@ -80,7 +90,9 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
               label="Price"
               type="number"
               value={price}
-              onChange={(e) => setPrice(parseInt(e.target.value))}
+              onChange={(e) =>
+                setPrice(Math.max(0, parseInt(e.target.value) || 0))
+              }
               fullWidth
             />
           </Box>
@@ -90,19 +102,25 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
               label="Quantity"
               type="number"
               value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
+              onChange={(e) =>
+                setQuantity(Math.max(0, parseInt(e.target.value, 10) || 0))
+              }
               fullWidth
             />
-
             <TextField label="Value" value={finalValue} disabled fullWidth />
           </Box>
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color='warning' >
+        <Button onClick={onClose} color="warning">
           Cancel
         </Button>
-        <Button onClick={handleSave} color="primary" variant="contained">
+        <Button
+          onClick={handleSave}
+          disabled={onSaveDisabled}
+          color="primary"
+          variant="contained"
+        >
           Save
         </Button>
       </DialogActions>
