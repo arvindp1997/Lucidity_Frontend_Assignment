@@ -60,7 +60,7 @@ function InventoryManagement() {
     const outOfStock = filteredData.filter(
       (item) => item.quantity === 0
     ).length;
-    const noOfCategory = new Set(filteredData.map((item) => item.category))
+    const noOfCategory = new Set(filteredData.map((item) => item.category.trim().toLocaleLowerCase()))
       .size;
 
     return [
